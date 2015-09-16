@@ -32,6 +32,10 @@ module.exports = function (options) {
           delete pending[url]
           return res
         })
+        .catch(function (err) {
+          delete pending[url]
+          return Promise.reject(err)
+        })
         .then(function (res) {
           if (first) return first(res)
           else return res
