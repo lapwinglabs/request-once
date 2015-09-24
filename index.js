@@ -32,7 +32,7 @@ module.exports = function (request, options) {
         return res
       }, function (err) {
         delete pending[key]
-        return err
+        throw err
       })
 
     var out

@@ -126,10 +126,10 @@ describe('requesting a pending url', function () {
 
   it('should clear the request after failure', function (next) {
     var url = 'http://httpbin.org/status/418'
-    var p1 = Request(url)
+    var p1 = request(url)
     p1.catch(function (err) {
       assert.ok(err)
-      var p2 = Request(url)
+      var p2 = request(url)
       p2.catch(function (err) {
         assert.ok(err)
         assert.ok(p1 !== p2)
