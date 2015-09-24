@@ -63,3 +63,5 @@ request.get('https://github.com').then(function (res) {
 Might add a caching option if I end up needing it, so that request results aren't immediately thrown away after the async function finishes
 
 Add support for generators and thunks (probably already works but need to test)
+
+Need a test to make sure that pending request gets reset on error
