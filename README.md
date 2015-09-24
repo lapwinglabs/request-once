@@ -49,11 +49,11 @@ If you were then to make a request to the same url before the previous request h
 // won't make another request to github if first request
 // is still pending
 
-request.get('https://github.com').then(function (res) {
+request('https://github.com').then(function (res) {
   // do something else
 })
 
-request.get('https://github.com').then(function (res) {
+request('https://github.com').then(function (res) {
   // handle same res object (or copy, if options.clone === true)
 })
 ```
