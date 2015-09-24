@@ -3,7 +3,7 @@
 > One Request to rule them all, One Request to find them.
 > One Request to bring them all, and in the darkness bind them.
 
-Maintains a pool of pending `GET` requests and returns a promise to be fulfilled when that request finishes. Essentially it will prevent your application from opening a unique socket connection for every request accessing the same resource. Useful if you're spawning a bunch of concurrent network requests that may have the same url.
+Maintains a keyed pool of pending asynchronous requests and returns a promise to be fulfilled when that request finishes. Essentially it allows you to save resources if you have a bunch of unrelated codepaths attempting to access the same resource at once. An example use case is an application that spawns many concurrent network requests which may be accessing the same url. `request-once` allows you to optimize this without thinking about batching things so as to avoid opening additional sockets unnecessarily.
 
 ### Usage
 
@@ -14,10 +14,31 @@ Install it:
 Use it:
 
 ```
-// options is currently ignored
-var Request = require('request-once')(options)
+// options (optional) recognizes:
+//
+// {
+//   clone: Boolean (default false),
+//   freeze: Boolean (default false)
+// }
+//
+// clone returns a deep copy of the result to any
+// chained promises so they can manipulate them
+// individually
+//
+// freeze recursively freezes the result, so if
+// the same object is passed to multiple request
+// handlers, they aren't able to step on each other's
+// toes
 
-Request.get('https://github.com').then(function (res) {
+var fn = function(url) {
+  return request_promise.get(url)
+}
+
+var options = { freeze: true }
+
+var request = require('request-once')(fn, options)
+
+request('https://github.com').then(function (res) {
   // do something
 })
 ```
@@ -25,30 +46,20 @@ Request.get('https://github.com').then(function (res) {
 If you were then to make a request to the same url before the previous request has completed, the API will return a reference to the original request's Promise (bluebird) instead of requesting again
 
 ```
-Request.get('https://github.com').then(function (res) {
-  // handle once
+// won't make another request to github if first request
+// is still pending
+
+request.get('https://github.com').then(function (res) {
+  // do something else
 })
-Request.get('https://github.com').then(function (res) {
-  // handle same res object
+
+request.get('https://github.com').then(function (res) {
+  // handle same res object (or copy, if options.clone === true)
 })
 ```
 
-If you want to provide a function to be run only once when the request first finishes, provide this function as the second parameter. Note that
-this function will be ignored if the request has already started
+### Unfinished Business
 
-```
-// This will only be executed once. Useful if you
-// want to preprocess the response for all handlers
+Might add a caching option if I end up needing it, so that request results aren't immediately thrown away after the async function finishes
 
-function first (res) {
-  res.added = 'ah'
-  return res
-}
-
-var url = 'http://httpbin.org/get'
-Promise.all([
-  Request(url, first).then(function (res) { assert.equal(res.added, 'ah') },
-  Request(url, first).then(function (res) { assert.equal(res.added, 'ah') },
-  Request(url, first).then(function (res) { assert.equal(res.added, 'ah') }
-])
-```
+Add support for generators and thunks (probably already works but need to test)
