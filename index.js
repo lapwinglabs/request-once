@@ -8,36 +8,49 @@
  * Dependencies
  */
 
-var request = require('superagent-promise')(
-  require('superagent'),
-  require('bluebird')
-)
+var co = require('co')
+var clone = require('deepcopy')
+var freeze = require('deep-freeze')
 
 /**
  * Module Exports
  */
 
-module.exports = function (options) {
+module.exports = function (request, options) {
+  options = options || {}
+
   /**
    * Currently Outstanding Requests
    */
 
   var pending = {}
 
-  return function (url, first) {
-    if (!pending[url]) {
-      pending[url] = request.get(url)
-        .end()
-        .then(function (res) {
-          delete pending[url]
-          return res
-        })
-        .then(function (res) {
-          if (first) return first(res)
-          else return res
-        })
+  return function (key) {
+    pending[key] = pending[key] || co(request(key))
+      .then(function (res) {
+        delete pending[key]
+        return res
+      }, function (err) {
+        delete pending[key]
+        return err
+      })
+
+    var out
+
+    if (options.clone) {
+      out = pending[key].then(function (data) {
+        return clone(data)
+      })
+    } else {
+      out = pending[key]
     }
 
-    return pending[url]
+    if (options.freeze) {
+      out = out.then(function (data) {
+        return typeof data === 'object' ? freeze(data) : data
+      })
+    }
+
+    return out
   }
 }
