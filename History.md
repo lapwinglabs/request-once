@@ -1,4 +1,9 @@
 
+1.0.2 / 2015-10-11
+==================
+
+  * wrap co in bluebird promise to propagate uncaught exceptions in promise chain
+
 1.0.1 / 2015-09-23
 ==================
 
