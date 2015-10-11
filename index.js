@@ -11,6 +11,7 @@
 var co = require('co')
 var clone = require('deepcopy')
 var freeze = require('deep-freeze')
+var Promise = require('bluebird')
 
 /**
  * Module Exports
@@ -26,7 +27,7 @@ module.exports = function (request, options) {
   var pending = {}
 
   return function (key) {
-    pending[key] = pending[key] || co(request(key))
+    pending[key] = pending[key] || Promise.resolve().then(function () { return co(request(key)) })
       .then(function (res) {
         delete pending[key]
         return res
