@@ -39,7 +39,7 @@ describe('requesting a pending url', function () {
 
   beforeEach(function (next) {
     count = 0
-    request = Request(promiseTask)
+    request = Request(promiseTask, { ttl_seconds: 2 })
     next()
   })
 
@@ -52,6 +52,38 @@ describe('requesting a pending url', function () {
     ]).then(function (results) {
       assert.equal(1, count)
       next()
+    })
+  })
+
+  it('should keep the result cached if specified', function (next) {
+    var url = 'http://httpbin.org/get'
+    Promise.all([
+      request(url).then(function () {}),
+      request(url).then(function () {}),
+      request(url).then(function () {})
+    ]).then(function (results) {
+      setTimeout(function () {
+        request(url).then(function () {
+          assert.equal(1, count)
+          next()
+        })
+      }, 1000)
+    })
+  })
+
+  it('should keep the expire the cached result after the timeout', function (next) {
+    var url = 'http://httpbin.org/get'
+    Promise.all([
+      request(url).then(function () {}),
+      request(url).then(function () {}),
+      request(url).then(function () {})
+    ]).then(function (results) {
+      setTimeout(function () {
+        request(url).then(function () {
+          assert.equal(2, count)
+          next()
+        })
+      }, 3000)
     })
   })
 

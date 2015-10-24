@@ -29,7 +29,18 @@ module.exports = function (request, options) {
   return function (key) {
     pending[key] = pending[key] || Promise.resolve().then(function () { return co(request(key)) })
       .then(function (res) {
-        delete pending[key]
+        var ttl = (options.ttl_hours || 0) * 60 * 60 * 1000
+        ttl += (options.ttl_minutes || 0) * 60 * 1000
+        ttl += (options.ttl_seconds || 0) * 1000
+        ttl += (options.ttl || 0)
+
+        if (ttl) {
+          ttl > 0 && setTimeout(function () {
+            delete pending[key]
+          }, ttl)
+        } else {
+          delete pending[key]
+        }
         return res
       }, function (err) {
         delete pending[key]
